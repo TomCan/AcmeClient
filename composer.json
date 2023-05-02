@@ -1,0 +1,31 @@
+{
+  "name": "tomcan/acmeclient",
+  "description": "PHP ACME client library",
+  "type": "package",
+  "keywords": [
+    "tomcan",
+    "LE",
+    "letsencrypt",
+    "acme",
+    "acmev2",
+    "rfc8555"
+  ],
+  "homepage": "https://tom.be",
+  "license": "Apache-2.0",
+  "authors": [
+    {
+      "name": "Tom Cannaerts",
+      "homepage": "https://tom.be"
+    }
+  ],
+  "autoload": {
+    "psr-4": {
+      "TomCan\\AcmeClient\\": "./src"
+    }
+  },
+  "require": {
+    "ext-openssl": "*",
+    "ext-json": "*",
+    "symfony/http-client-contracts": "^3.2"
+  }
+}
