@@ -2,6 +2,7 @@
 
 namespace TomCan\AcmeClient;
 
+use Symfony\Contracts\HttpClient\ResponseInterface;
 use TomCan\AcmeClient\Interfaces\AccountInterface;
 use TomCan\AcmeClient\Interfaces\AuthorizationInterface;
 use TomCan\AcmeClient\Interfaces\ChallengeInterface;
@@ -13,16 +14,23 @@ class AcmeClient
 {
     private HttpClientInterface $httpClient;
     private string $directoryUrl;
+    /** @var string[]|null  */
     private ?array $directory = null;
     private ?string $nonce = null;
 
     private AccountInterface $account;
+    /** @var \OpenSSLAsymmetricKey|false */
     private $accountKey;
+    /** @var mixed[] */
     private array $accountKeyDetails;
     private string $accountKeyThumbprint;
 
+    /** @var string[] */
     private array $classes;
 
+    /**
+     * @param string[] $classes
+     */
     public function __construct(
         HttpClientInterface $httpClient,
         string $directoryUrl = 'https://acme-v02.api.letsencrypt.org/directory',
@@ -64,7 +72,10 @@ class AcmeClient
         return rtrim(strtr(base64_encode($data), '+/', '-_'), '=');
     }
 
-    private function makeRequest(string $method, string $url, ?array $payload = null)
+    /**
+     * @param mixed[]|null $payload
+     */
+    private function makeRequest(string $method, string $url, ?array $payload = null): ResponseInterface
     {
         if ('POST' == $method) {
             if (null === $this->nonce) {
@@ -109,13 +120,22 @@ class AcmeClient
         $this->account = $account;
         // Open key and extract all required information
         $this->accountKey = openssl_pkey_get_private($this->account->getKey());
-        $this->accountKeyDetails = openssl_pkey_get_details($this->accountKey);
-        // SHA-256 hash of JWK Thumbprint
-        $this->accountKeyThumbprint = $this->base64UrlEncode(hash('sha256', json_encode([
-            'e'   => $this->base64UrlEncode($this->accountKeyDetails['rsa']['e']),
-            'kty' => 'RSA',
-            'n'   => $this->base64UrlEncode($this->accountKeyDetails['rsa']['n']),
-        ]), true));
+        if ($this->accountKey) {
+            $details = openssl_pkey_get_details($this->accountKey);
+            if ($details) {
+                $this->accountKeyDetails = $details;
+                // SHA-256 hash of JWK Thumbprint
+                $this->accountKeyThumbprint = $this->base64UrlEncode(hash('sha256', (string) json_encode([
+                    'e'   => $this->base64UrlEncode($this->accountKeyDetails['rsa']['e']),
+                    'kty' => 'RSA',
+                    'n'   => $this->base64UrlEncode($this->accountKeyDetails['rsa']['n']),
+                ]), true));
+            }
+        }
+
+        if (!$this->accountKey || !$this->accountKeyDetails || !$this->accountKeyThumbprint) {
+            throw new \Exception('Unable to open private key');
+        }
 
         $response = $this->makeRequest(
             'POST',
@@ -136,6 +156,9 @@ class AcmeClient
         return $this->account;
     }
 
+    /**
+     * @param string[] $domains
+     */
     public function createOrder(array $domains): OrderInterface
     {
         $items = [];
@@ -162,7 +185,8 @@ class AcmeClient
         );
 
         $className = $this->classes['order'];
-        return new $className(
+        /** @var OrderInterface $order */
+        $order = new $className(
             $headers['location'][0],
             $data->status,
             new \DateTime($data->expires),
@@ -170,8 +194,13 @@ class AcmeClient
             $data->authorizations,
             $data->finalize,
         );
+
+        return $order;
     }
 
+    /**
+     * @return AuthorizationInterface[]
+     */
     public function authorize(OrderInterface $order): array
     {
         $authorizationClass = $this->classes['authorization'];
@@ -195,6 +224,7 @@ class AcmeClient
                 );
             }
             // string $url, string $identifier, string $status, \DateTime $expires, array $challenges
+            /** @var AuthorizationInterface $authorization */
             $authorization = new $authorizationClass(
                 $url,
                 $data->identifier->value,
