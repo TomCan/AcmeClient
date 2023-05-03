@@ -10,7 +10,13 @@ class Order implements OrderInterface
     private string $url;
     private string $status;
     private \DateTime $expires;
+    /**
+     * @var mixed[]
+     */
     private array $identifiers;
+    /**
+     * @var string[]
+     */
     private array $authorizations;
     private string $finalize;
 
@@ -18,8 +24,8 @@ class Order implements OrderInterface
      * @param string $url
      * @param string $status
      * @param \DateTime $expires
-     * @param array $identifiers
-     * @param array $authorizations
+     * @param mixed[] $identifiers
+     * @param string[] $authorizations
      * @param string $finalize
      */
     public function __construct(string $url, string $status, \DateTime $expires, array $identifiers, array $authorizations, string $finalize)
@@ -47,11 +53,17 @@ class Order implements OrderInterface
         return $this->expires;
     }
 
+    /**
+     * @return mixed[]
+     */
     public function getIdentifiers(): array
     {
         return $this->identifiers;
     }
 
+    /**
+     * @return string[]
+     */
     public function getAuthorizations(): array
     {
         return $this->authorizations;
