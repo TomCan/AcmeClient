@@ -29,11 +29,12 @@ until I like it the way that suits me best ;) At this point, use for reference /
 - Authorize order
   - Get authorizations
   - Get challenges
-
-## Not yet implemented but definitely going to
 - Validate challenges
 - Check authorization status
-- Get certificate
+
+## Not yet implemented but definitely going to
+- Get certificate (finalize)
+- Add documentation
 
 ## Other goals
 - Maintain phpstan level 7 or above
