@@ -5,6 +5,7 @@ namespace TomCan\AcmeClient;
 use Symfony\Contracts\HttpClient\ResponseInterface;
 use TomCan\AcmeClient\Interfaces\AccountInterface;
 use TomCan\AcmeClient\Interfaces\AuthorizationInterface;
+use TomCan\AcmeClient\Interfaces\CertificateInterface;
 use TomCan\AcmeClient\Interfaces\ChallengeInterface;
 use TomCan\AcmeClient\Interfaces\OrderInterface;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
@@ -39,7 +40,7 @@ class AcmeClient
         $this->directoryUrl = $directoryUrl;
 
         $this->classes = [];
-        foreach (['account', 'authorization', 'challenge', 'order'] as $type) {
+        foreach (['account', 'authorization', 'challenge', 'order', 'certificate'] as $type) {
             if (isset($classes[$type])) {
                 $interface = 'TomCan\AcmeClient\Interfaces\\'.ucfirst($type).'Interface';
                 $implemented = @class_implements($classes[$type]);
@@ -309,6 +310,91 @@ class AcmeClient
         }
 
         return count($pendingChallenges) == 0;
+    }
+
+    public function finalize(OrderInterface $order): CertificateInterface
+    {
+        // generate new key
+        $privateKey = openssl_pkey_new([
+            'private_key_bits' => 4096,
+            'private_key_type' => OPENSSL_KEYTYPE_RSA,
+        ]);
+
+        if ($privateKey) {
+            openssl_pkey_export($privateKey, $privateKeyText);
+            // create temporary config file
+            $configFile = tempnam(sys_get_temp_dir(), 'openssl_');
+            if (false === $configFile) {
+                throw new \Exception('Unable to generate temporary openssl config file');
+            } else {
+                // compose content of temporary config file
+                $content = "[req]\nreq_extensions = v3_req\ndistinguished_name = dn\ndefault_md = sha512\n[dn]\n[v3_req]\nsubjectAltName = @san\n[san]\n";
+                $i = 0;
+                foreach ($order->getIdentifiers() as $identifier) {
+                    ++$i;
+                    $content .= 'DNS.'.$i.' = '.$identifier."\n";
+                }
+
+                // write file
+                file_put_contents($configFile, $content);
+
+                $csr = openssl_csr_new(
+                    [
+                        'CN' => $order->getIdentifiers()[0]
+                    ],
+                    $privateKey,
+                    [
+                        'config' => $configFile,
+                    ]
+                );
+                unlink($configFile);
+
+                if ($csr) {
+                    // convert to der (strip pem header/footer)
+                    openssl_csr_export($csr, $csrText, true);
+                    $csrLines = explode("\n", str_replace("\r", '', trim($csrText)));
+                    $csrLines = array_slice($csrLines, 1, count($csrLines) -2);
+                    $der = base64_decode(implode('', $csrLines));
+
+                    if ($der) {
+                        $response = $this->makeRequest(
+                            'POST',
+                            $order->getFinalize(),
+                            ['csr' => $this->base64UrlEncode($der)]
+                        );
+
+                        $data = json_decode($response->getContent());
+                        if ($data && $data->certificate) {
+                            $response = $this->makeRequest(
+                                'GET',
+                                $data->certificate,
+                                null
+                            );
+
+                            $certText = $response->getContent();
+
+                            $className = $this->classes['certificate'];
+                            /** @var CertificateInterface $certificate */
+                            $certificate = new $className(
+                                $privateKeyText,
+                                $csrText,
+                                $certText
+                            );
+
+                            return $certificate;
+                        } else {
+                            throw new \Exception('Unable to finalize order');
+                        }
+                    } else {
+                        throw new \Exception('Unable to convert csr to der');
+                    }
+                } else {
+                    throw new \Exception('Unable to generate csr');
+                }
+            }
+        } else {
+            throw new \Exception('Unable to generate private key');
+        }
     }
 
     /**
