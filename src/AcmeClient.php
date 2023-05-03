@@ -213,12 +213,12 @@ class AcmeClient
             $data = json_decode($response->getContent());
             $challenges = [];
             foreach ($data->challenges as $challenge) {
-                $challenges[] = new $challengeClass(
+                $challenges[$challenge->type] = new $challengeClass(
                     $challenge->type,
                     $challenge->status,
                     $challenge->url,
                     $challenge->token,
-                    'http-01' == $challenge->type ? $challenge->token.'.'.$this->accountKeyThumbprint : $this->accountKeyThumbprint
+                    'http-01' == $challenge->type ? $challenge->token.'.'.$this->accountKeyThumbprint : $this->base64UrlEncode(hash('sha256', $challenge->token.'.'.$this->accountKeyThumbprint, true))
                 );
             }
             // string $url, string $identifier, string $status, \DateTime $expires, array $challenges
