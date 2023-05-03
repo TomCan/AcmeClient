@@ -246,6 +246,71 @@ class AcmeClient
     }
 
     /**
+     * @param AuthorizationInterface[] $authorizations
+     * @param ChallengeInterface[] $challenges
+     */
+    public function validate(array $authorizations, array $challenges, int $pollAttempts = 10, int $pollInterval = 2): bool
+    {
+        // Request all validations
+        $pendingChallenges = [];
+        for ($i = 0; $i < count($authorizations); $i++) {
+            $authorization = $authorizations[$i];
+            // check if state is pending
+            if ('pending' == $authorization->getStatus()) {
+                $challenge = $challenges[$i];
+                if ('pending' == $challenge->getStatus()) {
+                    $pendingChallenges[$challenge->getToken()] = $challenge;
+                    // request validation
+                    $response = $this->makeRequest(
+                        'POST',
+                        $challenge->getUrl(),
+                        $this->signPayloadKID(
+                            ['keyAuthorization' => $challenge->getToken() . '.' . $this->accountKeyThumbprint],
+                            $challenge->getUrl()
+                        )
+                    );
+                    if (200 != $response->getStatusCode()) {
+                        throw new \Exception('Unable to validate challenge');
+                    }
+                }
+            }
+        }
+
+        // Check status of autharizations and challenges
+        $attempt = 0;
+        while (count($pendingChallenges) > 0 && $attempt < $pollAttempts) {
+            ++$attempt;
+            sleep($pollInterval);
+
+            for ($i = 0; $i < count($authorizations); $i++) {
+                // check status of authorization
+                $authorization = $authorizations[$i];
+                $authorization2 = $this->getAuthorization($authorization->getUrl());
+                if ($authorization->getStatus() != $authorization2->getStatus()) {
+                    // update status
+                    $authorization->setStatus($authorization2->getStatus());
+                }
+
+                foreach ($authorization2->getChallenges() as $challenge2) {
+                    if (isset($pendingChallenges[$challenge2->getToken()])) {
+                        $challenge = $pendingChallenges[$challenge2->getToken()];
+                        if ($challenge->getStatus() != $challenge2->getStatus()) {
+                            // update status
+                            $challenge->setStatus($challenge2->getStatus());
+                        }
+                        // check if this challange still needs to be checked
+                        if ('valid' == $authorization->getStatus() || 'valid' == $challenge->getStatus()) {
+                            unset($pendingChallenges[$challenge->getToken()]);
+                        }
+                    }
+                }
+            }
+        }
+
+        return count($pendingChallenges) > 0;
+    }
+
+    /**
      * START OF JWK functions
      */
 
