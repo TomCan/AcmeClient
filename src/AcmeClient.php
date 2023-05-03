@@ -201,39 +201,48 @@ class AcmeClient
      */
     public function authorize(OrderInterface $order): array
     {
-        $authorizationClass = $this->classes['authorization'];
-        $challengeClass = $this->classes['challenge'];
         $authorizations = [];
         foreach ($order->getAuthorizations() as $url) {
-            $response = $this->makeRequest(
-                'GET',
-                $url,
-                null
-            );
-            $data = json_decode($response->getContent());
-            $challenges = [];
-            foreach ($data->challenges as $challenge) {
-                $challenges[$challenge->type] = new $challengeClass(
-                    $challenge->type,
-                    $challenge->status,
-                    $challenge->url,
-                    $challenge->token,
-                    'http-01' == $challenge->type ? $challenge->token.'.'.$this->accountKeyThumbprint : $this->base64UrlEncode(hash('sha256', $challenge->token.'.'.$this->accountKeyThumbprint, true))
-                );
-            }
-            // string $url, string $identifier, string $status, \DateTime $expires, array $challenges
             /** @var AuthorizationInterface $authorization */
-            $authorization = new $authorizationClass(
-                $url,
-                $data->identifier->value,
-                $data->status,
-                \DateTime::createFromFormat('Y-m-d\TH:i:s\Z', $data->expires, new \DateTimeZone('UTC')),
-                $challenges
-            );
+            $authorization = $this->getAuthorization($url);
             $authorizations[] = $authorization;
         }
 
         return $authorizations;
+    }
+
+    public function getAuthorization(string $url): AuthorizationInterface
+    {
+        $authorizationClass = $this->classes['authorization'];
+        $challengeClass = $this->classes['challenge'];
+
+        $response = $this->makeRequest(
+            'GET',
+            $url,
+            null
+        );
+        $data = json_decode($response->getContent());
+        $challenges = [];
+        foreach ($data->challenges as $challenge) {
+            $challenges[$challenge->type] = new $challengeClass(
+                $challenge->type,
+                $challenge->status,
+                $challenge->url,
+                $challenge->token,
+                'http-01' == $challenge->type ? $challenge->token.'.'.$this->accountKeyThumbprint : $this->base64UrlEncode(hash('sha256', $challenge->token.'.'.$this->accountKeyThumbprint, true))
+            );
+        }
+        // string $url, string $identifier, string $status, \DateTime $expires, array $challenges
+        /** @var AuthorizationInterface $authorization */
+        $authorization = new $authorizationClass(
+            $url,
+            $data->identifier->value,
+            $data->status,
+            \DateTime::createFromFormat('Y-m-d\TH:i:s\Z', $data->expires, new \DateTimeZone('UTC')),
+            $challenges
+        );
+
+        return $authorization;
     }
 
     /**
