@@ -11,6 +11,7 @@ interface AuthorizationInterface
     public function getUrl(): string;
     public function getIdentifier(): string;
     public function getStatus(): string;
+    public function setStatus(string $status): void;
     public function getExpires(): \DateTime;
 
     /**

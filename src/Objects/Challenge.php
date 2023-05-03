@@ -30,6 +30,12 @@ class Challenge implements ChallengeInterface
     {
         return $this->status;
     }
+
+    public function setStatus(string $status): void
+    {
+        $this->status = $status;
+    }
+
     public function getUrl(): string
     {
         return $this->url;
