@@ -307,7 +307,7 @@ class AcmeClient
             }
         }
 
-        return count($pendingChallenges) > 0;
+        return count($pendingChallenges) == 0;
     }
 
     /**
