@@ -7,7 +7,6 @@ use TomCan\AcmeClient\Interfaces\AccountInterface;
 use TomCan\AcmeClient\Interfaces\AuthorizationInterface;
 use TomCan\AcmeClient\Interfaces\ChallengeInterface;
 use TomCan\AcmeClient\Interfaces\OrderInterface;
-use TomCan\AcmeClient\Objects\Order;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 class AcmeClient
@@ -242,14 +241,22 @@ class AcmeClient
      * START OF JWK functions
      */
 
-    private function signPayloadJWK($payload, $url): array
+    /**
+     * @param mixed[]|null $payload
+     * @return string[]
+     */
+    private function signPayloadJWK(?array $payload, string $url): array
     {
-        $payload = is_array($payload) ? str_replace('\\/', '/', json_encode($payload)) : '';
+        $payload = str_replace('\\/', '/', (string) json_encode($payload));
         $payload = $this->base64UrlEncode($payload);
-        $protected = $this->base64UrlEncode(json_encode($this->getJWKEnvelope($url)));
+        $protected = $this->base64UrlEncode((string) json_encode($this->getJWKEnvelope($url)));
 
-        if (false === openssl_sign($protected.'.'.$payload, $signature, $this->accountKey, "SHA256")) {
-            throw new \Exception('Could not generate signature');
+        if ($this->accountKey) {
+            if (false === openssl_sign($protected.'.'.$payload, $signature, $this->accountKey, "SHA256")) {
+                throw new \Exception('Could not generate signature');
+            }
+        } else {
+            throw new \Exception('Private key not loaded');
         }
 
         return [
@@ -259,6 +266,9 @@ class AcmeClient
         ];
     }
 
+    /**
+     * @return mixed[]
+     */
     private function getJWKEnvelope(string $url): array
     {
         return [
@@ -273,15 +283,22 @@ class AcmeClient
         ];
     }
 
-    private function signPayloadKID($payload, $url): array
+    /**
+     * @param mixed[]|null $payload
+     * @return mixed[]
+     */
+    private function signPayloadKID(?array $payload, string $url): array
     {
-        $payload = is_array($payload) ? str_replace('\\/', '/', json_encode($payload)) : '';
+        $payload = str_replace('\\/', '/', (string) json_encode($payload));
         $payload = $this->base64UrlEncode($payload);
-        $protected = $this->base64UrlEncode(json_encode($this->getKIDEnvelope($url)));
+        $protected = $this->base64UrlEncode((string) json_encode($this->getKIDEnvelope($url)));
 
-        $result = openssl_sign($protected . '.' . $payload, $signature, $this->accountKey, "SHA256");
-        if (false === $result) {
-            throw new \Exception('Could not generate signature');
+        if ($this->accountKey) {
+            if (false === openssl_sign($protected.'.'.$payload, $signature, $this->accountKey, "SHA256")) {
+                throw new \Exception('Could not generate signature');
+            }
+        } else {
+            throw new \Exception('Private key not loaded');
         }
 
         return [
@@ -291,6 +308,9 @@ class AcmeClient
         ];
     }
 
+    /**
+     * @return string[]
+     */
     private function getKIDEnvelope(string $url): array
     {
         return [
