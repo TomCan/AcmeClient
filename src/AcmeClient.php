@@ -106,7 +106,9 @@ class AcmeClient
 
         // extract new nonce from response and save for next request
         $headers = $response->getHeaders();
-        $this->nonce = $headers['replay-nonce'][0];
+        if (isset($headers['replay-nonce'])) {
+            $this->nonce = $headers['replay-nonce'][0];
+        }
 
         var_dump($response->getStatusCode(), $response->getHeaders(false), $response->getContent(false));
 
