@@ -35,5 +35,9 @@ until I like it the way that suits me best ;) At this point, use for reference /
 - Check authorization status
 - Get certificate
 
+## Other goals (WIP)
+- PHPStan level 7+
+- php-cs-fixer
+
 # References
 https://datatracker.ietf.org/doc/html/rfc8555
