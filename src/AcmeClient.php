@@ -108,7 +108,7 @@ class AcmeClient
         $headers = $response->getHeaders();
         $this->nonce = $headers['replay-nonce'][0];
 
-        var_dump($response->getStatusCode(), $response->getHeaders(), $response->getContent());
+        var_dump($response->getStatusCode(), $response->getHeaders(false), $response->getContent(false));
 
         return $response;
     }
@@ -206,7 +206,7 @@ class AcmeClient
         $authorizations = [];
         foreach ($order->getAuthorizations() as $url) {
             $response = $this->makeRequest(
-                'POST',
+                'GET',
                 $url,
                 null
             );
@@ -227,7 +227,7 @@ class AcmeClient
                 $url,
                 $data->identifier->value,
                 $data->status,
-                \DateTime::createFromFormat('Y-m-d\TH:i:s', $data->expires),
+                \DateTime::createFromFormat('Y-m-d\TH:i:s\Z', $data->expires, new \DateTimeZone('UTC')),
                 $challenges
             );
             $authorizations[] = $authorization;
