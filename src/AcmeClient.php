@@ -178,11 +178,10 @@ class AcmeClient
         $headers = $response->getHeaders();
         $data = json_decode($response->getContent());
 
-        var_dump(
-            $response->getStatusCode(),
-            $headers,
-            $data,
-        );
+        $identifiers = [];
+        foreach ($data->identifiers as $identifier) {
+            $identifiers[] = $identifier->value;
+        }
 
         $className = $this->classes['order'];
         /** @var OrderInterface $order */
@@ -190,7 +189,7 @@ class AcmeClient
             $headers['location'][0],
             $data->status,
             new \DateTime($data->expires),
-            $data->identifiers,
+            $identifiers,
             $data->authorizations,
             $data->finalize,
         );
