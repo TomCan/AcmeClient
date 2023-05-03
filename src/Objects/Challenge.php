@@ -6,7 +6,6 @@ use TomCan\AcmeClient\Interfaces\ChallengeInterface;
 
 class Challenge implements ChallengeInterface
 {
-
     private string $type;
     private string $status;
     private string $url;

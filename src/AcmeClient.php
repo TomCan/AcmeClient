@@ -34,8 +34,7 @@ class AcmeClient
         HttpClientInterface $httpClient,
         string $directoryUrl = 'https://acme-v02.api.letsencrypt.org/directory',
         array $classes = []
-    )
-    {
+    ) {
         $this->httpClient = $httpClient;
         $this->directoryUrl = $directoryUrl;
 

@@ -1,6 +1,5 @@
 <?php
 
-
 namespace TomCan\AcmeClient\Objects;
 
 use TomCan\AcmeClient\Interfaces\OrderInterface;
