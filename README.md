@@ -32,8 +32,10 @@ until I like it the way that suits me best ;) At this point, use for reference /
 - Validate challenges
 - Check authorization status
 
-## Not yet implemented but definitely going to
+## WIP
 - Get certificate (finalize)
+
+## Not yet implemented but definitely going to
 - Add documentation
 
 ## Other goals
