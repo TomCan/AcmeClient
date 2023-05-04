@@ -362,15 +362,26 @@ class AcmeClient
                             $order->getFinalize(),
                             ['csr' => $this->base64UrlEncode($der)]
                         );
-
                         $data = json_decode($response->getContent());
-                        if ($data && $data->certificate) {
+
+                        // keep polling until status is no longer 'processing'
+                        while ($data && 'processing' == $data->status) {
+                            sleep(1);
+                            $response = $this->makeRequest(
+                                'POST',
+                                $order->getUrl(),
+                                null
+                            );
+                            $data = json_decode($response->getContent());
+                        }
+
+                        // check to see if status is 'valid'
+                        if ($data && 'valid' == $data->status) {
                             $response = $this->makeRequest(
                                 'POST',
                                 $data->certificate,
                                 null
                             );
-
                             $certText = $response->getContent();
 
                             $className = $this->classes['certificate'];
