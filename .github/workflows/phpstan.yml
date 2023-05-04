@@ -6,12 +6,10 @@ jobs:
     container:
       image: intractosre/php:7.4
       volumes:
-        - .:/app
+        - ${{ github.workspace }}:/app
     steps:
-      - name: pwd
-        run: pwd
-      - name: find
-        run: find
+      - name: Checkout repo
+        uses: actions/checkout@v3
       - name: Composer
         run: composer install
       - name: Run phpstan
