@@ -24,6 +24,7 @@ This is very much a work in progress. All classes and interfaces are bound to ch
 until I like it the way that suits me best ;) At this point, use for reference / ideas only.
 
 ## Implemented functionality
+
 - Account creation
 - Create order
 - Authorize order
@@ -34,11 +35,14 @@ until I like it the way that suits me best ;) At this point, use for reference /
 - Get certificate (finalize)
 
 ## TODO
+
 - Add documentation
 
 ## Other goals
+
 - Maintain phpstan level 7 or above
 - Maintain php-cs-fixer standards
+- CI/CD pipeline
 
 # References
 https://datatracker.ietf.org/doc/html/rfc8555
