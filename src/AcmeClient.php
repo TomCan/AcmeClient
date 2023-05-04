@@ -219,7 +219,7 @@ class AcmeClient
         $challengeClass = $this->classes['challenge'];
 
         $response = $this->makeRequest(
-            'GET',
+            'POST',
             $url,
             null
         );
@@ -366,7 +366,7 @@ class AcmeClient
                         $data = json_decode($response->getContent());
                         if ($data && $data->certificate) {
                             $response = $this->makeRequest(
-                                'GET',
+                                'POST',
                                 $data->certificate,
                                 null
                             );
@@ -449,7 +449,12 @@ class AcmeClient
      */
     private function signPayloadKID(?array $payload, string $url): array
     {
-        $payload = str_replace('\\/', '/', (string) json_encode($payload));
+        if (null === $payload) {
+            // GET-as-POST with empty payload
+            $payload = '';
+        } else {
+            $payload = str_replace('\\/', '/', (string) json_encode($payload));
+        }
         $payload = $this->base64UrlEncode($payload);
         $protected = $this->base64UrlEncode((string) json_encode($this->getKIDEnvelope($url)));
 
