@@ -1,0 +1,20 @@
+name: phpstan
+on: [push]
+jobs:
+  php74:
+    runs-on: ubuntu-latest
+    container:
+      image: intractosre/php:7.4
+      volumes:
+        - .:/app
+    steps:
+      - name: pwd
+        run: pwd
+      - name: find
+        run: find
+      - name: Composer
+        run: composer install
+      - name: Run phpstan
+        run: php ./vendor/bin/phpstan analyse --level=7 src
+      - name: run cs
+        run: PHP_CS_FIXER_FUTURE_MODE=1 php ./vendor/bin/php-cs-fixer fix -v --dry-run --diff src
