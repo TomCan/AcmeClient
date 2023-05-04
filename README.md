@@ -18,12 +18,12 @@ to provide, but it's up to you to make sure the given values end up where they n
 This does not aim to be a full implementation of the RFC, but mainly focuses on the flow of obtaining certificate
 from ACME compatible services (eg. Let's Encrypt).
 
-# Work in progress - alpha vibes right here
+# Work in progress - beta vibes right here
 
 This is very much a work in progress. All classes and interfaces are bound to change without notice
 until I like it the way that suits me best ;) At this point, use for reference / ideas only.
 
-## Currently implemented
+## Implemented functionality
 - Account creation
 - Create order
 - Authorize order
@@ -31,11 +31,9 @@ until I like it the way that suits me best ;) At this point, use for reference /
   - Get challenges
 - Validate challenges
 - Check authorization status
-
-## WIP
 - Get certificate (finalize)
 
-## Not yet implemented but definitely going to
+## TODO
 - Add documentation
 
 ## Other goals
