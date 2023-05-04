@@ -1,10 +1,10 @@
 name: phpstan
 on: [push]
 jobs:
-  php74:
+  php8.1:
     runs-on: ubuntu-latest
     container:
-      image: intractosre/php:7.4
+      image: intractosre/php:8.1
       volumes:
         - ${{ github.workspace }}:/app
     steps:
