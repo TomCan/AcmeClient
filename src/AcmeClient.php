@@ -331,7 +331,13 @@ class AcmeClient
             }
         }
 
-        return count($pendingChallenges) == 0;
+        foreach ($authorizations as $authorization) {
+            if ('valid' !== $authorization->getStatus()) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     public function finalize(OrderInterface $order): CertificateInterface
