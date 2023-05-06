@@ -301,7 +301,7 @@ class AcmeClient
                             $challenge->setStatus($challengeFetched->getStatus());
                         }
                         // check if this challange still needs to be checked
-                        if ('valid' == $authorization->getStatus() || 'valid' == $challenge->getStatus()) {
+                        if ('pending' != $authorization->getStatus() || 'pending' != $challenge->getStatus()) {
                             unset($pendingChallenges[$challenge->getToken()]);
                         }
                     }
