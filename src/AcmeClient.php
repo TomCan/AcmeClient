@@ -2,6 +2,7 @@
 
 namespace TomCan\AcmeClient;
 
+use Psr\Log\LoggerInterface;
 use Symfony\Contracts\HttpClient\ResponseInterface;
 use TomCan\AcmeClient\Interfaces\AccountInterface;
 use TomCan\AcmeClient\Interfaces\AuthorizationInterface;
@@ -28,31 +29,48 @@ class AcmeClient
     /** @var string[] */
     private array $classes;
 
+    private ?LoggerInterface $logger;
+
     /**
      * @param string[] $classes
      */
     public function __construct(
         HttpClientInterface $httpClient,
         string $directoryUrl = 'https://acme-v02.api.letsencrypt.org/directory',
-        array $classes = []
+        array $classes = [],
+        ?LoggerInterface $logger = null,
     ) {
         $this->httpClient = $httpClient;
         $this->directoryUrl = $directoryUrl;
+        $this->logger = $logger;
 
         $this->classes = [];
         foreach (['account', 'authorization', 'challenge', 'order', 'certificate'] as $type) {
+            $interface = 'TomCan\AcmeClient\Interfaces\\'.ucfirst($type).'Interface';
             if (isset($classes[$type])) {
-                $interface = 'TomCan\AcmeClient\Interfaces\\'.ucfirst($type).'Interface';
                 $implemented = @class_implements($classes[$type]);
                 if (!is_array($implemented) || !in_array($interface, $implemented)) {
+                    $this->log('error', 'Class {classname} does not implement {interface}', ['classname' => $classes[$type], 'interface' => $interface]);
                     throw new \Exception('Class '.$classes[$type].' does not implement '.$interface);
                 } else {
+                    $this->log('notice', 'Using {classname} for {interface}', ['classname' => $classes[$type], 'interface' => $interface]);
                     $this->classes[$type] = $classes[$type];
                 }
             } else {
                 // default to our objects
                 $this->classes[$type] = 'TomCan\AcmeClient\Objects\\'.ucfirst($type);
+                $this->log('debug', 'Using {classname} for {interface}', ['classname' => $this->classes[$type], 'interface' => $interface]);
             }
+        }
+    }
+
+    /**
+     * @param mixed[] $context
+     */
+    private function log(string $level, string $message, array $context = []): void
+    {
+        if (null !== $this->logger) {
+            $this->logger->log($level, 'TomCan\AcmeClient: '.$message, $context);
         }
     }
 
@@ -76,9 +94,11 @@ class AcmeClient
      */
     private function makeRequest(string $method, string $url, ?array $payload = null): ResponseInterface
     {
+        $this->log('info', 'Making request: {method} {url}', ['method' => $method, 'url' => $url]);
         if ('POST' == $method) {
             if (null === $this->nonce) {
                 // get initial/new nonce
+                $this->log('notice', 'No nonce. need to request one first');
                 $this->makeRequest('HEAD', $this->getDirectory('newNonce'));
                 if (null === $this->nonce) {
                     throw new \Exception('Unable to get nonce');
@@ -109,9 +129,11 @@ class AcmeClient
         $headers = $response->getHeaders();
         if (isset($headers['replay-nonce'])) {
             $this->nonce = $headers['replay-nonce'][0];
+            $this->log('debug', 'Saving nonce {nonce}', ['nonce' => $this->nonce]);
         }
 
-        var_dump($response->getStatusCode(), $response->getHeaders(false), $response->getContent(false));
+        $this->log('debug', "response headers:\n {headers}", ['headers' => print_r($response->getHeaders(), true)]);
+        $this->log('debug', "response body:\n{body}", ['body' => $response->getContent()]);
 
         return $response;
     }
