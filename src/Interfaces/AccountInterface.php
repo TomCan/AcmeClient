@@ -4,7 +4,7 @@ namespace TomCan\AcmeClient\Interfaces;
 
 interface AccountInterface
 {
-    public function __construct(string $email, string $url, ?string $key);
+    public static function create(string $email, string $url, ?string $key): AccountInterface;
     public function getEmail(): string;
     public function getUrl(): ?string;
     public function setUrl(string $url): void;

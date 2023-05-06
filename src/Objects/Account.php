@@ -17,6 +17,11 @@ class Account implements AccountInterface
         $this->key = $key;
     }
 
+    public static function create(string $email, ?string $url, ?string $key): AccountInterface
+    {
+        return new Account($email, $url, $key);
+    }
+
     public function getEmail(): string
     {
         return $this->email;

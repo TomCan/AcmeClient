@@ -8,7 +8,7 @@ interface OrderInterface
      * @param string[] $identifiers
      * @param string[] $authorizations
      */
-    public function __construct(string $url, string $status, \DateTime $expires, array $identifiers, array $authorizations, string $finalize);
+    public static function create(string $url, string $status, \DateTime $expires, array $identifiers, array $authorizations, string $finalize): OrderInterface;
     public function getUrl(): string;
     /**
      * @return string[]

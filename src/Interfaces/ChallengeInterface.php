@@ -4,7 +4,7 @@ namespace TomCan\AcmeClient\Interfaces;
 
 interface ChallengeInterface
 {
-    public function __construct(string $type, string $status, string $url, string $token, string $value);
+    public static function create(string $type, string $status, string $url, string $token, string $value): ChallengeInterface;
     public function getType(): string;
     public function getStatus(): string;
     public function setStatus(string $status): void;

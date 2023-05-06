@@ -7,7 +7,7 @@ interface AuthorizationInterface
     /**
      * @param ChallengeInterface[] $challenges
      */
-    public function __construct(string $url, string $identifier, string $status, \DateTime $expires, array $challenges);
+    public static function create(string $url, string $identifier, string $status, \DateTime $expires, array $challenges): AuthorizationInterface;
     public function getUrl(): string;
     public function getIdentifier(): string;
     public function getStatus(): string;

@@ -28,6 +28,14 @@ class Authorization implements AuthorizationInterface
         $this->challenges = $challenges;
     }
 
+    /**
+     * @param ChallengeInterface[] $challenges
+     */
+    public static function create(string $url, string $identifier, string $status, \DateTime $expires, array $challenges): AuthorizationInterface
+    {
+        return new Authorization($url, $identifier, $status, $expires, $challenges);
+    }
+
     public function getUrl(): string
     {
         return $this->url;

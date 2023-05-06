@@ -186,7 +186,7 @@ class AcmeClient
 
         $className = $this->classes['order'];
         /** @var OrderInterface $order */
-        $order = new $className(
+        $order = $className::create(
             $headers['location'][0],
             $data->status,
             new \DateTime($data->expires),
@@ -226,7 +226,7 @@ class AcmeClient
         $data = json_decode($response->getContent());
         $challenges = [];
         foreach ($data->challenges as $challenge) {
-            $challenges[$challenge->type] = new $challengeClass(
+            $challenges[$challenge->type] = $challengeClass::create(
                 $challenge->type,
                 $challenge->status,
                 $challenge->url,
@@ -236,7 +236,7 @@ class AcmeClient
         }
         // string $url, string $identifier, string $status, \DateTime $expires, array $challenges
         /** @var AuthorizationInterface $authorization */
-        $authorization = new $authorizationClass(
+        $authorization = $authorizationClass::create(
             $url,
             $data->identifier->value,
             $data->status,
@@ -386,7 +386,7 @@ class AcmeClient
 
                             $className = $this->classes['certificate'];
                             /** @var CertificateInterface $certificate */
-                            $certificate = new $className(
+                            $certificate = $className::create(
                                 $privateKeyText,
                                 $csrText,
                                 $certText

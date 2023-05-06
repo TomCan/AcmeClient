@@ -21,6 +21,11 @@ class Challenge implements ChallengeInterface
         $this->value = $value;
     }
 
+    public static function create(string $type, string $status, string $url, string $token, string $value): ChallengeInterface
+    {
+        return new Challenge($type, $status, $url, $token, $value);
+    }
+
     public function getType(): string
     {
         return $this->type;

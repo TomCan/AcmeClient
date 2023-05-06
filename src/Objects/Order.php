@@ -20,12 +20,8 @@ class Order implements OrderInterface
     private string $finalize;
 
     /**
-     * @param string $url
-     * @param string $status
-     * @param \DateTime $expires
      * @param mixed[] $identifiers
      * @param string[] $authorizations
-     * @param string $finalize
      */
     public function __construct(string $url, string $status, \DateTime $expires, array $identifiers, array $authorizations, string $finalize)
     {
@@ -35,6 +31,15 @@ class Order implements OrderInterface
         $this->identifiers = $identifiers;
         $this->authorizations = $authorizations;
         $this->finalize = $finalize;
+    }
+
+    /**
+     * @param mixed[] $identifiers
+     * @param string[] $authorizations
+     */
+    public static function create(string $url, string $status, \DateTime $expires, array $identifiers, array $authorizations, string $finalize): OrderInterface
+    {
+        return new Order($url, $status, $expires, $identifiers, $authorizations, $finalize);
     }
 
     public function getUrl(): string

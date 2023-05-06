@@ -17,6 +17,11 @@ class Certificate implements CertificateInterface
         $this->certificate = $certificate;
     }
 
+    public static function create(string $key, string $csr, string $certificate): CertificateInterface
+    {
+        return new Certificate($key, $csr, $certificate);
+    }
+
     public function getKey(): string
     {
         return $this->key;
