@@ -287,18 +287,18 @@ class AcmeClient
             for ($i = 0; $i < count($authorizations); $i++) {
                 // check status of authorization
                 $authorization = $authorizations[$i];
-                $authorization2 = $this->getAuthorization($authorization->getUrl());
-                if ($authorization->getStatus() != $authorization2->getStatus()) {
+                $authorizationFetched = $this->getAuthorization($authorization->getUrl());
+                if ($authorization->getStatus() != $authorizationFetched->getStatus()) {
                     // update status
-                    $authorization->setStatus($authorization2->getStatus());
+                    $authorization->setStatus($authorizationFetched->getStatus());
                 }
 
-                foreach ($authorization2->getChallenges() as $challenge2) {
-                    if (isset($pendingChallenges[$challenge2->getToken()])) {
-                        $challenge = $pendingChallenges[$challenge2->getToken()];
-                        if ($challenge->getStatus() != $challenge2->getStatus()) {
+                foreach ($authorizationFetched->getChallenges() as $challengeFetched) {
+                    if (isset($pendingChallenges[$challengeFetched->getToken()])) {
+                        $challenge = $pendingChallenges[$challengeFetched->getToken()];
+                        if ($challenge->getStatus() != $challengeFetched->getStatus()) {
                             // update status
-                            $challenge->setStatus($challenge2->getStatus());
+                            $challenge->setStatus($challengeFetched->getStatus());
                         }
                         // check if this challange still needs to be checked
                         if ('valid' == $authorization->getStatus() || 'valid' == $challenge->getStatus()) {
